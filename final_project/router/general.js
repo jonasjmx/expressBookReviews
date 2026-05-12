@@ -46,43 +46,43 @@ public_users.get('/books-title/:title', (req, res) => {
     : res.status(404).json({ message: "No books found with this title" });
 });
 
-// ── Task 1 & 10 — Get all books (async/await with Axios) ─────────────────────
+// Task 10: Get all books available in the shop — async/await with Axios
 public_users.get('/', async function (req, res) {
   try {
     const response = await axios.get('http://localhost:5000/books');
-    return res.status(200).json(JSON.stringify(response.data));
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 });
 
-// ── Task 2 & 11 — Get book by ISBN (async/await with Axios) ──────────────────
+// Task 11: Get book details based on ISBN — async/await with Axios
 public_users.get('/isbn/:isbn', async function (req, res) {
   try {
     const isbn = req.params.isbn;
-    const response = await axios.get(`http://localhost:5000/book-isbn/${isbn}`);
-    return res.status(200).json(response.data);
-  } catch (error) {
-    return res.status(404).json({ message: error.message });
-  }
-});
-  
-// ── Task 3 & 12 — Get books by author (async/await with Axios) ───────────────
-public_users.get('/author/:author', async function (req, res) {
-  try {
-    const author = encodeURIComponent(req.params.author);
-    const response = await axios.get(`http://localhost:5000/books-author/${author}`);
+    const response = await axios.get('http://localhost:5000/book-isbn/' + isbn);
     return res.status(200).json(response.data);
   } catch (error) {
     return res.status(404).json({ message: error.message });
   }
 });
 
-// ── Task 4 & 13 — Get books by title (async/await with Axios) ────────────────
+// Task 12: Get book details based on Author — async/await with Axios
+public_users.get('/author/:author', async function (req, res) {
+  try {
+    const author = encodeURIComponent(req.params.author);
+    const response = await axios.get('http://localhost:5000/books-author/' + author);
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(404).json({ message: error.message });
+  }
+});
+
+// Task 13: Get book details based on Title — async/await with Axios
 public_users.get('/title/:title', async function (req, res) {
   try {
     const title = encodeURIComponent(req.params.title);
-    const response = await axios.get(`http://localhost:5000/books-title/${title}`);
+    const response = await axios.get('http://localhost:5000/books-title/' + title);
     return res.status(200).json(response.data);
   } catch (error) {
     return res.status(404).json({ message: error.message });
