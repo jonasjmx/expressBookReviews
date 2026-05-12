@@ -5,11 +5,9 @@ let users = require("./auth_users.js").users;
 const public_users = express.Router();
 const axios = require('axios');
 
-public_users.post("/register", (req,res) => {
-  //Write your code here
+public_users.post("/register", (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
-
   if (!username || !password) {
     return res.status(400).json({ message: "Username and password are required" });
   }
@@ -20,77 +18,72 @@ public_users.post("/register", (req,res) => {
   return res.status(200).json({ message: "User successfully registered. Now you can login" });
 });
 
-// Get the book list available in the shop
+// ── Internal sync helper routes (used by Axios async tasks) ──────────────────
+public_users.get('/books', (req, res) => res.status(200).json(books));
+
+public_users.get('/book-isbn/:isbn', (req, res) => {
+  const book = books[req.params.isbn];
+  return book
+    ? res.status(200).json(book)
+    : res.status(404).json({ message: "Book not found" });
+});
+
+public_users.get('/books-author/:author', (req, res) => {
+  const result = Object.keys(books)
+    .filter(k => books[k].author === req.params.author)
+    .map(k => books[k]);
+  return result.length > 0
+    ? res.status(200).json(result)
+    : res.status(404).json({ message: "No books found for this author" });
+});
+
+public_users.get('/books-title/:title', (req, res) => {
+  const result = Object.keys(books)
+    .filter(k => books[k].title === req.params.title)
+    .map(k => books[k]);
+  return result.length > 0
+    ? res.status(200).json(result)
+    : res.status(404).json({ message: "No books found with this title" });
+});
+
+// ── Task 1 & 10 — Get all books (async/await with Axios) ─────────────────────
 public_users.get('/', async function (req, res) {
   try {
-    const getAllBooks = new Promise((resolve, reject) => {
-      resolve(books);
-    });
-    const bookList = await getAllBooks;
-    return res.status(200).json(JSON.stringify(bookList));
+    const response = await axios.get('http://localhost:5000/books');
+    return res.status(200).json(JSON.stringify(response.data));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 });
 
-// Get book details based on ISBN
+// ── Task 2 & 11 — Get book by ISBN (async/await with Axios) ──────────────────
 public_users.get('/isbn/:isbn', async function (req, res) {
   try {
     const isbn = req.params.isbn;
-    const getBook = new Promise((resolve, reject) => {
-      const book = books[isbn];
-      if (book) {
-        resolve(book);
-      } else {
-        reject(new Error("Book not found"));
-      }
-    });
-    const book = await getBook;
-    return res.status(200).json(book);
+    const response = await axios.get(`http://localhost:5000/book-isbn/${isbn}`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(404).json({ message: error.message });
   }
 });
   
-// Get book details based on author
+// ── Task 3 & 12 — Get books by author (async/await with Axios) ───────────────
 public_users.get('/author/:author', async function (req, res) {
   try {
-    const author = req.params.author;
-    const getBooksByAuthor = new Promise((resolve, reject) => {
-      const bookKeys = Object.keys(books);
-      const result = bookKeys
-        .filter(key => books[key].author === author)
-        .map(key => books[key]);
-      if (result.length > 0) {
-        resolve(result);
-      } else {
-        reject(new Error("No books found for this author"));
-      }
-    });
-    const result = await getBooksByAuthor;
-    return res.status(200).json(result);
+    const author = encodeURIComponent(req.params.author);
+    const response = await axios.get(`http://localhost:5000/books-author/${author}`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(404).json({ message: error.message });
   }
 });
 
-// Get all books based on title
+// ── Task 4 & 13 — Get books by title (async/await with Axios) ────────────────
 public_users.get('/title/:title', async function (req, res) {
   try {
-    const title = req.params.title;
-    const getBooksByTitle = new Promise((resolve, reject) => {
-      const bookKeys = Object.keys(books);
-      const result = bookKeys
-        .filter(key => books[key].title === title)
-        .map(key => books[key]);
-      if (result.length > 0) {
-        resolve(result);
-      } else {
-        reject(new Error("No books found with this title"));
-      }
-    });
-    const result = await getBooksByTitle;
-    return res.status(200).json(result);
+    const title = encodeURIComponent(req.params.title);
+    const response = await axios.get(`http://localhost:5000/books-title/${title}`);
+    return res.status(200).json(response.data);
   } catch (error) {
     return res.status(404).json({ message: error.message });
   }
